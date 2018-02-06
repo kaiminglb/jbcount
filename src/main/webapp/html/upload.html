@@ -1,0 +1,32 @@
+
+<div>
+	<div class="demo-section k-content">
+		<input name="files" id="files" type="file" />
+	</div>
+</div>
+
+<script>
+	//<c:url value="upload/save" var="saveUrl" />
+	//<c:url value="upload/remove" var="removeUrl" />
+	$("#files").kendoUpload({
+		async : {
+			saveUrl : "upload/save",//上传url
+			removeUrl : "upload/remove",//移除url
+			//batch : true,//批量
+			autoRetryAfter : 500,//若失败，多少毫秒后重试
+			maxAutoRetries : 2,//最大重试次数
+			autoUpload : true
+		//自动上传
+		},
+		localization : {
+			remove : "移除",
+			//select: "选择..",
+			retry : "重试"
+		},
+		validation : {
+			allowedExtensions : [ ".doc", ".docx"],//允许文件后缀名
+			maxFileSize : 10000000
+		//最大字节数
+		}
+	});
+</script>

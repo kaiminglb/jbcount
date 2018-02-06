@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="3.0" xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd">
+	
+	<display-name>Archetype Created Web Application</display-name>
+	
+	<!-- 配置Spring IOC 容器 -->  
+	<!-- 创建Spring的监听器 -->
+	<listener>
+		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
+	</listener>
+	
+	<!-- Spring 的监听器可以通过这个上下文参数来获取beans.xml（spring配置文件） 的位置 -->
+	<context-param>
+		<param-name>contextConfigLocation</param-name>
+		<param-value>classpath*:applicationContext.xml</param-value>
+	</context-param>
+	
+	
+	<!-- 配置SpringMVC 的 DispatcherServlet 控制器 --> 
+	<!-- springmvc,springmvc默认配置文件名为 servletname-servlet.xml,路径为当前类路径下；
+	否则指定springmvc的配置文件位置 -->
+	<servlet>
+		<servlet-name>dispatcherServlet</servlet-name>
+		<servlet-class>org.springframework.web.servlet.DispatcherServlet</servlet-class>
+		<!-- 配置DispatcherServlet的一个初始化参数：配置SpringMVC配置文件的位置名称 -->  
+        <init-param>  
+            <param-name>contextConfigLocation</param-name>  
+            <param-value>classpath:springmvc.xml</param-value>  
+        </init-param>  
+        <load-on-startup>1</load-on-startup>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>dispatcherServlet</servlet-name>
+		<url-pattern>/</url-pattern>
+	</servlet-mapping>
+	
+	<!-- 系统从配置文件中读取的一些初始化信息,放在application中 -->
+<!-- 	<servlet>
+		<servlet-name>initServlet</servlet-name>
+		<servlet-class>com.km.web.InitServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet> -->
+	
+	
+	
+	
+	<!-- 添加session监听器，修补上传bug -->
+	<!-- <listener>
+		<listener-class>com.km.cms.web.CmsSessionListener</listener-class>
+	</listener> -->
+	
+	
+	<!-- 字符编码 -->
+	<!-- 配置编码方式过滤器,注意一点:要配置在所有过滤器的前面 --> 
+	<filter>
+		<filter-name>CharacterFilter</filter-name>
+		<filter-class>org.springframework.web.filter.CharacterEncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+	<filter-mapping>
+		<filter-name>CharacterFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	
+	<!-- Spring中提供了 org.springframework.orm.hibernate4.support.OpenSessionInViewFilter; 
+		这个类来实现OpenSessionInViewer的操作 -->
+	<filter>
+		<filter-name>openSessionInViewerFilter</filter-name>
+		<filter-class>org.springframework.orm.hibernate4.support.OpenSessionInViewFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>openSessionInViewerFilter</filter-name>
+		<url-pattern>/*</url-pattern>
+	</filter-mapping>
+	
+	<!-- 为了使用SpringMVC框架实现REST风格,需要配置  HiddenHttpMethodFilter-->  
+    <filter>  
+        <filter-name>hiddenHttpMethodFilter</filter-name>  
+        <filter-class>org.springframework.web.filter.HiddenHttpMethodFilter</filter-class>  
+    </filter>  
+    <filter-mapping>  
+        <filter-name>hiddenHttpMethodFilter</filter-name>  
+        <url-pattern>/*</url-pattern>  
+    </filter-mapping>  
+	
+</web-app>
