@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 
+
 import com.km.model.DataSourceRequest;
 import com.km.model.DataSourceResult;
 
@@ -28,6 +29,8 @@ import com.km.model.DataSourceResult;
  * 类说明 dao抽象类
  */
 public interface BaseDao<T> {
+	
+	public static Integer num = 0 ;
 	/**
 	 * 添加对象
 	 * @param t

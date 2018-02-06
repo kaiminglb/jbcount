@@ -37,6 +37,8 @@
 		
 		$(function() {
 		});
+		$(function() {
+		});
 
 		$("#tabstrip").kendoTabStrip({
 			dataTextField : "Name",
