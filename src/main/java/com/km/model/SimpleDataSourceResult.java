@@ -21,7 +21,7 @@ import java.util.List;
 /**
  * @author PipiLu
  * @version 创建时间：2018年2月6日 上午12:43:45
- * 类说明
+ * 类说明  List为结果的包装对象
  */
 public class SimpleDataSourceResult {
 	//List<?>一般只能用于读取，不能add，除非是null

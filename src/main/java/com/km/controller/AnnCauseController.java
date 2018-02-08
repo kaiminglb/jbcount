@@ -56,16 +56,16 @@ public class AnnCauseController {
 	
 	
 	//1 增、删、改、一般读 
+	/**
+	 * 返回所有对象的查询
+	 */
 	@RequestMapping(value = "/readAll",method = RequestMethod.POST)
 	public @ResponseBody List<AnnCause> read(){
 		return annCauseService.getList();
 	}
-	
-	@RequestMapping(value = "/read",method = RequestMethod.POST)
-	public @ResponseBody DataSourceResult read(@RequestBody DataSourceRequest request){
-		return annCauseService.getList(request);
-	}
-	
+	/**
+	 *  插入仅返回一个对象，客户端datasource只用model来接，没total、data选项
+	 */
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	public @ResponseBody AnnCause create(@RequestBody  Map<String,Object> model) {
 		AnnCause annCause = new AnnCause();
@@ -77,19 +77,9 @@ public class AnnCauseController {
 		annCauseService.saveOrUpdate(annCause);
 		return annCause;
 	}
-	
-	@RequestMapping(value = "/createItem", method = RequestMethod.POST)
-	public @ResponseBody SimpleDataSourceResult createItem(@RequestBody  Map<String,Object> model) {
-		AnnCause annCause = new AnnCause();
-		
-		String name = (String)model.get("name");
-		annCause.setName(name);
-		annCause.setJianPin(PinyinUtils.converterToFirstSpell(name));
-		annCause.setQuanPin(PinyinUtils.getPingYin(name));
-		annCauseService.saveOrUpdate(annCause);
-		return new SimpleDataSourceResult(annCause);
-	}
-	
+	/**
+	 * 普通更新仅返回一个对象,客户端datasource只用model来接，没total、data选项
+	 */
 	@RequestMapping(value = "/update",method = RequestMethod.POST)
 	public @ResponseBody AnnCause update(@RequestBody Map<String,Object> model) throws CustomException{
 		AnnCause annCause = new AnnCause();
@@ -103,6 +93,36 @@ public class AnnCauseController {
 		return annCause;
 	}
 	
+	
+	
+	/**
+	 * 带分页、查询条件的查询，服务端分页
+	 */
+	@RequestMapping(value = "/read",method = RequestMethod.POST)
+	public @ResponseBody DataSourceResult read(@RequestBody DataSourceRequest request){
+		return annCauseService.getList(request);
+	}
+	
+	/**
+	 * 插入，返回包装对象（含有List）；数据在data属性对应列表中；客户端datasource需配置data项接收一列表
+	 */
+	@RequestMapping(value = "/createItem", method = RequestMethod.POST)
+	public @ResponseBody SimpleDataSourceResult createItem(@RequestBody  Map<String,Object> model) {
+		AnnCause annCause = new AnnCause();
+		
+		String name = (String)model.get("name");
+		annCause.setName(name);
+		annCause.setJianPin(PinyinUtils.converterToFirstSpell(name));
+		annCause.setQuanPin(PinyinUtils.getPingYin(name));
+		annCauseService.saveOrUpdate(annCause);
+		return new SimpleDataSourceResult(annCause);
+	}
+	
+	
+	
+	/**
+	 * 更新，返回包装对象（含有List））；数据在data属性对应列表中；客户端datasource需配置data项接收一列表
+	 */
 	@RequestMapping(value = "/updateItem",method = RequestMethod.POST)
 	public @ResponseBody SimpleDataSourceResult updateItem(@RequestBody Map<String,Object> model) throws CustomException{
 		AnnCause annCause = new AnnCause();
@@ -142,19 +162,11 @@ public class AnnCauseController {
 		return annCauseService.getList(request);
 	}
 	
+	/**
+	 * 只传一个filter过来，用model去接需要的查询关键字
+	 */
 	@RequestMapping(value = "/readCodeByKey",method = RequestMethod.POST)
 	public @ResponseBody SimpleDataSourceResult readCodeByKey(@RequestBody Map<String,Object> model){
-		//若查询条件为空或者分页信息为空，返回空的DataSourceResult
-		/*
-		 * 客户端处理，没查询关键字不提交request
-		if(request.getFilter().getFilters().isEmpty()){
-			DataSourceResult result = new DataSourceResult();
-			result.setAggregates(null);
-			result.setData(null);
-			result.setTotal(0);
-			return result;
-		}
-		*/
 		//正常查询返回
 		String key = (String)model.get("value");
 				
