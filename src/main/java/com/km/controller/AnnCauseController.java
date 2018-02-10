@@ -29,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.km.common.PinyinUtils;
 import com.km.common.ResultUtils;
+import com.km.common.enums.ResultEnum;
 import com.km.common.exception.CustomException;
 import com.km.model.AnnCause;
 import com.km.model.DataSourceRequest;
@@ -173,9 +174,28 @@ public class AnnCauseController {
 		return new SimpleDataSourceResult(annCauseService.findAnnCauseByJianPin(key));
 	}
 	
+	/**
+	 * 
+	* @Description: TODO(这里用一句话描述这个方法的作用)   
+	* @param model
+	* @return    设定文件
+	 */
+	@RequestMapping(value = "/checkByName",method = RequestMethod.POST)
+	public @ResponseBody Result checkByName(String p){
+		//正常查询返回
+		Result r;
+		if(annCauseService.checkExistedByAnnCauseName(p)){
+			r = ResultUtils.error(ResultEnum.ANNCAUSEEXISTED);
+		}else{
+			r= ResultUtils.success();
+		}
+		return r;
+	}
+	
+	
 	
 	// TODO 从excel批量插入案由
-	@RequestMapping(value = "/createBatch" , method = RequestMethod.POST)
+	@RequestMapping(value = "/createBatchFromExcel" , method = RequestMethod.POST)
 	public @ResponseBody   Result  createBatch(@RequestParam MultipartFile file){
 		// 处理excel
 		

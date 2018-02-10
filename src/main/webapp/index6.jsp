@@ -4,20 +4,26 @@
 <!DOCTYPE html >
 <html>
 <head>
-<title>无服务端过滤，服务端一次返回全部数据</title>
+<title>grid的remote validation</title>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<link href="<c:url value='/resources/styles/kendo.common.min.css'/>" rel="stylesheet" />
-<link href="<c:url value='/resources/styles/kendo.rtl.min.css'/>" rel="stylesheet" />
+<link href="<c:url value='/resources/styles/kendo.common.min.css'/>"
+	rel="stylesheet" />
+<link href="<c:url value='/resources/styles/kendo.rtl.min.css'/>"
+	rel="stylesheet" />
 <%-- <link href="<c:url value='/resources/styles/kendo.default.min.css'/>"  
     rel="stylesheet" />  --%>
-<link href="<c:url value='/resources/styles/kendo.blueopal.min.css'/>" rel="stylesheet" />
-<link href="<c:url value='/resources/custom/custom.css'/>" rel="stylesheet" />
+<link href="<c:url value='/resources/styles/kendo.blueopal.min.css'/>"
+	rel="stylesheet" />
+<link href="<c:url value='/resources/custom/custom.css'/>"
+	rel="stylesheet" />
 
 <script src="<c:url value='/resources/js/jquery.min.js' />"></script>
 <script src="<c:url value='/resources/js/jszip.min.js' />"></script>
 <script src="<c:url value='/resources/js/kendo.all.min.js' />"></script>
-<script src="<c:url value='/resources/js/messages/kendo.messages.zh-CN.min.js' />"></script>
-<script src="<c:url value='/resources/js/cultures/kendo.culture.zh-CN.min.js' />"></script>
+<script
+	src="<c:url value='/resources/js/messages/kendo.messages.zh-CN.min.js' />"></script>
+<script
+	src="<c:url value='/resources/js/cultures/kendo.culture.zh-CN.min.js' />"></script>
 <script>
 	kendo.culture("zh-CN");
 </script>
@@ -52,6 +58,8 @@
 	<c:url value="/annCause/create" var="createUrl" />
 	<c:url value="/annCause/update" var="updateUrl" />
 	<c:url value="/annCause/destroy" var="destroyUrl" />
+	
+	<c:url value="/annCause/checkByName" var="check" />
 	<!-- 案由增删改查  -->
 
 	<div id="example">
@@ -60,7 +68,7 @@
 
 		<div id="grid"></div>
 		<script>
-			function onShow(e) {
+			function onShow(e) {//显示通知组件
 				if (e.sender.getNotifications().length == 1) {//哪个组件发出的通知，就在其中间显示
 					var element = e.element.parent(), // 
 					eWidth = element.width(), //
@@ -78,8 +86,46 @@
 					});
 				}
 			}
-
+			
+			
+			
 			$(function() {
+				//验证逻辑
+				var remoteValidator = {
+					valid : false,//验证结果
+					initiated : false,//标记，true为验证中
+					check : function(element, validator) {//验证方法，验证当前元素，当前验证器
+						remoteValidator.initiated = true;
+						//simulate Ajax
+						$.ajax({
+					          url: "${check}",
+					          type: 'POST',
+					          dataType: 'json',
+					          data: { p : element.val() },
+
+					          success: function(data) {
+					            // data object contains true or false on whether
+					            // or not the field is valid
+								if(data && data.code === 0){
+									remoteValidator.valid = true;
+								}
+								validator.validateInput(element);//验证器必须验证,刷新验证信息
+								remoteValidator.initiated = false;
+					          },
+					          failure: function() {//网络超时
+					        	  centered.show("远程验证失败，网络超时", "error");
+					        	  remoteValidator.valid = true;
+					        	  validator.validateInput(element);
+					        	  remoteValidator.initiated = false;
+					          }
+					        });
+
+					        // the ajax call is asynchronous, so just return false for now
+					        //return false;
+					        
+					 }//end check
+				};
+				
 				var centered = $("#centeredNotification").kendoNotification({
 					autoHideAfter : 4000,
 					stacking : "down",
@@ -133,10 +179,11 @@
 								dataType : "json"
 							},
 							parameterMap : function(options, operation) {
-								console.info(options);
+								//console.info(options);
 								//读返回所有数据，无需传查询条件
-								 if (operation !== "read") {
+								 if (operation !== "read"&& options.models) {
 									 return kendo.stringify(options);
+									 //return {models: kendo.stringify(options.models)};//增、删、改返回对象
 								} 
 								//return kendo.stringify(options);//查询参数
 							}
@@ -163,7 +210,24 @@
 										nullable : true
 									},//不可编辑
 									name : {
-										type : "string"
+										type : "string",
+										validation: {//验证规则
+				                            required: true,
+				                            custom: function(input) {
+				                              if (input.prop("name") === "name" && input.val() != "") {//name字段才进入此规则
+				                                if (!remoteValidator.initiated) {//还未开始远程验证
+				                                  remoteValidator.check(input, this);//发起远程验证 
+				                                  input.attr("data-custom-msg", "checking...");
+				                                  return false;
+				                                }
+				                                input.attr("data-custom-msg", "案由名称已存在!");
+				                                //返回验证结果
+				                                console.info(remoteValidator.valid);
+				                                return remoteValidator.valid;
+				                              }
+				                              return true;//非name字段，不应用此规则；直接返回true
+				                            }
+				                          }//end validation
 									},
 									quanPin : {
 										editable : false,
@@ -177,18 +241,18 @@
 							}
 						//end model
 						},//end schema
-						pageSize : 10,//分页
-						serverPaging : true,//服务端分页
-						serverFiltering : true,//服务端过滤
+						//pageSize : 10,//分页
+						//serverPaging : true,//服务端分页
+						//serverFiltering : true,//服务端过滤
 					},//end dataSource
 
 					height : 600,//grid高度
-					filterable : {//grid row查询
+					/* filterable : {//grid row查询
 						mode : "row"
-					},
+					}, */
 					//pageable : true,//展示分页组件
 					pageable : {
-						//pageSize : 20,//客户端分页
+						pageSize : 20,//客户端分页
 						refresh : true
 					},
 					sortable : true,//排序 
@@ -235,6 +299,7 @@
 					]//end columns
 				});//end gird
 			});
+			
 		</script>
 	</div>
 
