@@ -10,10 +10,10 @@
 	rel="stylesheet" />
 <link href="<c:url value='/resources/styles/kendo.rtl.min.css'/>"
 	rel="stylesheet" />
-<%-- <link href="<c:url value='/resources/styles/kendo.default.min.css'/>"  
-    rel="stylesheet" />  --%>
-<link href="<c:url value='/resources/styles/kendo.blueopal.min.css'/>"
-	rel="stylesheet" />
+<link href="<c:url value='/resources/styles/kendo.default.min.css'/>"  
+    rel="stylesheet" /> 
+<%-- <link href="<c:url value='/resources/styles/kendo.blueopal.min.css'/>"
+	rel="stylesheet" /> --%>
 <link href="<c:url value='/resources/custom/custom.css'/>"
 	rel="stylesheet" />
 
@@ -78,12 +78,13 @@
 			
 			//显示上传窗体
 			function batchFromExcel(e) {
-                e.preventDefault();
-				console.info(this);//batchFromExcel执行的上下文，grid
-                var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
-                wnd.content(detailsTemplate(dataItem));
+				console.info(this); //batchFromExcel执行的上下文，grid
+				e.preventDefault();
+                /* var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                wnd.content(detailsTemplate(dataItem)); */
                 wnd.center().open();
             }
+			
 			
 			
 			$(function() {
@@ -96,15 +97,15 @@
 				}).data("kendoNotification");
 
 				//初始化上传窗体
-			    var wnd = $("#upload")
-                   .kendoWindow({
+			    var wnd = $("#upload").kendoWindow({
                        title: "案由批量上传",
                        modal: true,
                        visible: false,
                        resizable: false,
-                       width: 300
+                       width: 600
                    }).data("kendoWindow");
 				
+				//grid--------------------------
 				$("#grid").kendoGrid({
 					dataSource : {
 						requestEnd : function(e) {//结束提示成功
@@ -263,9 +264,9 @@
 					sortable : true,//排序 
 					toolbar : [ "create" ,
 					    {
-						    name: "batchExcel",
+						    name: "batch",
 						    text: "批量添加",
-						    click: batchFromExcel}
+						    click: function(e){console.log("foo"); return false;}//batchFromExcel
 					 	}            
 					],//新建菜单
 					editable : "popup",//弹出编辑
@@ -308,7 +309,17 @@
 						width : "200px"
 					} //编辑，删除
 					]//end columns
-				});//end gird
+				});//end gird---------------
+				
+				// 绑定自定义按钮事件，必须在grid初始化后。batch为按钮的name
+				$(".k-grid-batch", "#grid").bind("click", function (e) {
+					console.info(this); //执行的上下文，#grid
+					e.preventDefault();
+	                /* var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+	                wnd.content(detailsTemplate(dataItem)); */
+	                wnd.center().open();
+				});
+				
 			});
 			
 		</script>
