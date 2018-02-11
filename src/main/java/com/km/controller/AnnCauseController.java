@@ -181,15 +181,15 @@ public class AnnCauseController {
 	* @return    设定文件
 	 */
 	@RequestMapping(value = "/checkByName",method = RequestMethod.POST)
-	public @ResponseBody Result checkByName(String p){
+	public @ResponseBody Boolean checkByName(String p){
 		//正常查询返回
-		Result r;
-		if(annCauseService.checkExistedByAnnCauseName(p)){
-			r = ResultUtils.error(ResultEnum.ANNCAUSEEXISTED);
-		}else{
-			r= ResultUtils.success();
-		}
-		return r;
+//		Result r;
+//		if(annCauseService.checkExistedByAnnCauseName(p)){
+//			r = ResultUtils.error(ResultEnum.ANNCAUSEEXISTED);
+//		}else{
+//			r= ResultUtils.success();
+//		}
+		return !annCauseService.checkExistedByAnnCauseName(p);
 	}
 	
 	

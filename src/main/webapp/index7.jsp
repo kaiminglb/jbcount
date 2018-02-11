@@ -53,8 +53,11 @@
 		<span id="centeredNotification" style="display:none;"></span>
 
 		<div id="grid"></div>
+		
+		<div id="upload"></div>
 		<script>
-			function onShow(e) {//显示通知组件
+			//显示通知组件
+			function onShow(e) {
 				if (e.sender.getNotifications().length == 1) {//哪个组件发出的通知，就在其中间显示
 					var element = e.element.parent(), // 
 					eWidth = element.width(), //
@@ -73,46 +76,18 @@
 				}
 			}
 			
+			//显示上传窗体
+			function batchFromExcel(e) {
+                e.preventDefault();
+				console.info(this);//batchFromExcel执行的上下文，grid
+                var dataItem = this.dataItem($(e.currentTarget).closest("tr"));
+                wnd.content(detailsTemplate(dataItem));
+                wnd.center().open();
+            }
 			
 			
 			$(function() {
-				//验证逻辑
-				var remoteValidator = {
-					valid : false,//验证结果
-					initiated : false,//标记，true为验证中
-					check : function(element, validator) {//验证方法，验证当前元素，当前验证器
-						remoteValidator.initiated = true;
-						//simulate Ajax
-						$.ajax({
-					          url: "${check}",
-					          async: false,
-					          type: 'POST',
-					          dataType: 'json',
-					          data: { p : element.val() },
-
-					          success: function(data) {
-					            // data object contains true or false on whether
-					            // or not the field is valid
-								if(data){
-									remoteValidator.valid = true;
-								}
-								validator.validateInput(element);//验证器必须验证,刷新验证信息
-								remoteValidator.initiated = false;
-					          },
-					          failure: function() {//网络超时
-					        	  centered.show("远程验证失败，网络超时", "error");
-					        	  remoteValidator.valid = true;
-					        	  validator.validateInput(element);
-					        	  remoteValidator.initiated = false;
-					          }
-					        });
-
-					        // the ajax call is asynchronous, so just return false for now
-					        //return false;
-					        
-					 }//end check
-				};
-				
+				//初始化通知插件
 				var centered = $("#centeredNotification").kendoNotification({
 					autoHideAfter : 4000,
 					stacking : "down",
@@ -120,6 +95,16 @@
 					button : true
 				}).data("kendoNotification");
 
+				//初始化上传窗体
+			    var wnd = $("#upload")
+                   .kendoWindow({
+                       title: "案由批量上传",
+                       modal: true,
+                       visible: false,
+                       resizable: false,
+                       width: 300
+                   }).data("kendoWindow");
+				
 				$("#grid").kendoGrid({
 					dataSource : {
 						requestEnd : function(e) {//结束提示成功
@@ -170,7 +155,7 @@
 								//读返回所有数据，无需传查询条件
 								 if (operation !== "read") {
 									 return kendo.stringify(options);
-									 //return {models: kendo.stringify(options.models)};//增、删、改返回对象
+									 //return {models: kendo.stringify(options.models)};//增、删、改返回对象;schema没有data选项
 								} 
 								//return kendo.stringify(options);//查询参数
 							}
@@ -200,19 +185,52 @@
 										type : "string",
 										validation: {//验证规则
 				                            required: true,
+				                            //全 汉字 
+				                            allchin: function(input){
+				                            	if (input.is("[name='name']") && input.val() != "") {
+				                            		var r = /^[\u4e00-\u9fa5]+$/.test(input.val());
+				                                    if(r==false){ input.attr("data-allchin-msg", "案由名称必须为中文");}
+				                            		return r;
+				                            	}
+				                            	return true;
+				                            },
+				                            //远程唯一验证
 				                            custom: function(input) {
-				                              if (input.prop("name") === "name" && input.val() != "") {//name字段才进入此规则
-				                                if (!remoteValidator.initiated) {//还未开始远程验证
-				                                  remoteValidator.check(input, this);//发起远程验证 
-				                                  input.attr("data-custom-msg", "checking...");
-				                                  return false;
-				                                }
-				                                input.attr("data-custom-msg", "案由名称已存在!");
-				                                //返回验证结果
-				                                console.info(remoteValidator.valid);
-				                                return remoteValidator.valid;
-				                              }
-				                              return true;//非name字段，不应用此规则；直接返回true
+				                            	 if (input.is("[name='name']") && input.val() != "") {
+				                            		 
+				                            		 //input.attr("data-namevalidation-msg", "案由名称已添加");
+                                                     var isValid;
+
+                                                     input.attr("data-custom-msg", "checking...");
+                                                     $.ajax({
+                                                         // This is key, otherwise request will be made asynchronously and you won't get your response from the server when needed
+                                                         url: "${check}", 
+                                                         async: false, //必须同步，不然那返回值为undefined
+                                                          type: 'POST',
+	                           					          dataType: 'json',
+	                           					          data: { p : input.val() },
+			                           					  beforeSend: function () {
+			                           						 //同步请求下,beforeSend无效
+	                                                	  	//input.attr("data-custom-msg", "checking...");
+			                           					  },
+	                                                  })
+                                                       // My action is a JsonResult that returns either true or false (no quotes, etc.)
+                                                       .done(function (data) {
+                                                    	   isValid = data;
+                                                    	   if(isValid===false){input.attr("data-custom-msg", "案由名称已添加");}
+                                                       })
+                                                       .fail(function (request, status, error) {
+                                                         isValid = true;//网络超时或异常验证通过，不让客户等待
+                                                       })
+                                                       .always(function (data) {
+                                                    	   //input.attr("data-custom-msg", "案由名称已添加");
+                                                        });
+                                                       
+                                                     console.info(isValid);
+                                                     return isValid;
+                                                 }
+
+                                                 return true;
 				                            }
 				                         }//end validation
 									},
@@ -243,7 +261,13 @@
 						refresh : true
 					},
 					sortable : true,//排序 
-					toolbar : [ "create" ],//新建菜单
+					toolbar : [ "create" ,
+					    {
+						    name: "batchExcel",
+						    text: "批量添加",
+						    click: batchFromExcel}
+					 	}            
+					],//新建菜单
 					editable : "popup",//弹出编辑
 
 					columns : //显示列设置
