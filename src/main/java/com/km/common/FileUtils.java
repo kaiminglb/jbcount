@@ -18,7 +18,6 @@ package com.km.common;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -49,6 +48,18 @@ public class FileUtils {
 		String extension = getExtensionName(fileFullName);
 		return extension.equalsIgnoreCase("doc")
 				|| extension.equalsIgnoreCase("docx");
+	}
+
+	/**
+	 *
+	 * @Description: 判断文件后缀名是否为Xlsx，不支持office2003的xls
+	 * @param fileFullName
+	 *            文件全名
+	 * @return 设定文件
+	 */
+	public static boolean isXlsx(String fileFullName) {
+		String extension = getExtensionName(fileFullName);
+		return extension.equalsIgnoreCase("xlsx");
 	}
 
 	/**
