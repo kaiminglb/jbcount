@@ -1,17 +1,22 @@
 /**
  * @Title: AnnCauseController.java
  * @Package com.km.controller
- * @Description: TODO(用一句话描述该文件做什么)
+ * @Description: 案由controller
  * @author hulikaimen@gmail.com
  * @date 2018年1月16日 上午1:07:18
  * @version V1.0
  */
 package com.km.controller;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import com.km.common.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,6 +35,9 @@ import com.km.model.DataSourceResult;
 import com.km.model.Result;
 import com.km.model.SimpleDataSourceResult;
 import com.km.service.AnnCauseService;
+import org.wuwz.poi.ExcelKit;
+import org.wuwz.poi.hanlder.ReadHandler;
+
 
 /**
  * @author PipiLu
@@ -181,9 +189,8 @@ public class AnnCauseController {
     }
 
     /**
-     * @param model
-     * @return 设定文件
-     * @Description: TODO(这里用一句话描述这个方法的作用)
+     * @param p 名字
+     * @return 是否重名，重名返回false,不重名返回true
      */
     @RequestMapping(value = "/checkByName", method = RequestMethod.POST)
     public @ResponseBody
@@ -202,8 +209,7 @@ public class AnnCauseController {
     // TODO 从excel批量导入案由
     @RequestMapping(value = "/createBatchFromExcel", method = RequestMethod.POST)
     public @ResponseBody
-    Result createBatch(HttpServletRequest request,
-                       @RequestParam MultipartFile file) {
+    Result createBatch(@RequestParam MultipartFile file) {
         // 如果为excel 2007以上格式文件，转存；否则不做处理;2003的放弃支持
         if (!FileUtils.isXlsx(file.getOriginalFilename()))
             return null;
@@ -211,21 +217,50 @@ public class AnnCauseController {
         // 不同容器下，可能得到空值；用配置的方式兼容性最好
         // String uploadPath = request.getServletContext().getRealPath("./")
         // + File.separator + "upload";
+
+        // 上传目录
         File uploadDir = new File(uploadDirPath);
         if (!uploadDir.exists()) {
             uploadDir.mkdir();
         }
 
 
-        // 转存文件
-        file.transferTo(localFile);
+        String filePath = uploadDir + File.separator + file.getOriginalFilename();
+        /* 获取上传文件 */
+        File storeFile = new File(filePath);
 
-        // 处理excel
+        try {
+            /* 转存文件 */
+            file.transferTo(storeFile);
+
+
+            // 读取并解析文件
+            final List<AnnCause> list = new ArrayList<>();
+
+            // 执行excel文件导入
+            ExcelKit.$Import().readExcel(storeFile, new ReadHandler() {
+                @Override
+                public void handler(int sheetIndex, int rowIndex, List<String> row) {
+                    if (rowIndex != 0) { //排除第一行
+                        AnnCause annCause = new AnnCause();
+                        annCause.setName(row.get(0));
+                        list.add(annCause);
+                    }
+                }
+            });
+            /*批量保存案由*/
+            annCauseService.saveOrUpdateBatch(list);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (storeFile.exists()) {
+                storeFile.delete();
+            }
+        }
 
         Result result = ResultUtils.success();
-        return null;
+        return result;
     }
     // TODO 从excel批量导入案由
-
 
 }

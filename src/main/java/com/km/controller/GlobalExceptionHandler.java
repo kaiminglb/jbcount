@@ -4,7 +4,7 @@
 
 * @Package handle
 
-* @Description: TODO(用一句话描述该文件做什么)
+* @Description: 全局异常处理类。
 
 * @author hulikaimen@gmail.com
 
@@ -35,7 +35,7 @@ import com.km.model.Result;
 public class GlobalExceptionHandler {
 	private Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 	
-	//返回json对象
+	/*返回json对象*/
     @ExceptionHandler(value=CustomException.class)//处理指定类型异常
     public @ResponseBody Result handleCustomException(CustomException e){
         //调用commons-lang3下的ExceptionUtils 类来获取异常的具体信息
