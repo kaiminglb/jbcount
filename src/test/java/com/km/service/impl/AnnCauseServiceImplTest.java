@@ -42,12 +42,15 @@ public class AnnCauseServiceImplTest {
 	@Autowired
 	AnnCauseService annCauseService;
 	
-	@Test(expected= NonUniqueResultException.class)//期待异常 
+	/*@Test(expected= NonUniqueResultException.class)//期待异常
 //	@Transactional// 标明此方法需使用事务
 //	@Rollback(true)// 标明使用完此方法后事务不回滚,true时为回滚
 	public void testCheckExistedByAnnCauseName1() {
-		Boolean result1 = annCauseService.checkExistedByAnnCauseName("信用卡纠纷");
-	}
+		*//*AnnCause annCause = new AnnCause();
+		annCause.setName("信用卡纠纷测试");
+		annCauseService.saveOrUpdate(annCause);*//*
+		Boolean result1 = annCauseService.checkExistedByAnnCauseName("海域使用权纠纷");
+	}*/
 	
 	@Test
 	public void testCheckExistedByAnnCauseName2() {
