@@ -113,12 +113,12 @@ public class FileUtils {
 	}
 
 	/**
-	* @Description:
-	* @Param: [docPath] 全路径
-	* @return: java.lang.String  路径片段，如 /XXxx/yyyy
-	* @Author: PiPiLu
-	* @Date: 2018/3/3 
-	*/
+	 * @Description:
+	 * @Param: [docPath] 全路径
+	 * @return: java.lang.String  路径片段，如 /XXxx/yyyy
+	 * @Author: PiPiLu
+	 * @Date: 2018/3/3
+	 */
 	private static String getPathCut(String docPath) {
 		int begin = getStringNum(docPath, "/", 2);
 		int end = docPath.lastIndexOf('.');
