@@ -44,7 +44,8 @@
 	<c:url value="/annCause/create" var="createUrl" />
 	<c:url value="/annCause/update" var="updateUrl" />
 	<c:url value="/annCause/destroy" var="destroyUrl" />
-	
+
+	<c:url value="/annCause/createBatchFromExcel" var="batchFromExcel" />
 	<c:url value="/annCause/checkByName" var="check" />
 	<!-- 案由增删改查  -->
 
@@ -53,8 +54,11 @@
 		<span id="centeredNotification" style="display:none;"></span>
 
 		<div id="grid"></div>
-		
-		<div id="upload"></div>
+
+		<div id="upload">
+			<input name="file" id="file" type="file" />
+		</div>
+
 		<script>
 			//显示通知组件
 			function onShow(e) {
@@ -104,6 +108,27 @@
                        resizable: false,
                        width: 600
                    }).data("kendoWindow");
+
+                $("#file").kendoUpload({
+                    async : {
+                        saveUrl : "${batchFromExcel}",//上传url
+                        //batch : true,//批量
+                        autoRetryAfter : 500,//若失败，多少毫秒后重试
+                        maxAutoRetries : 2,//最大重试次数
+                        autoUpload : true
+                        //自动上传
+                    },
+                    localization : {
+                        //remove : "移除",
+                        //select: "选择..",
+                        retry : "重试"
+                    },
+                    validation : {
+                        allowedExtensions : [ ".xlsx"],//允许文件后缀名
+                        maxFileSize : 10000000
+                        //最大字节数
+                    }
+                });
 				
 				//grid--------------------------
 				$("#grid").kendoGrid({

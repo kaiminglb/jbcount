@@ -31,4 +31,8 @@ public class StringUtils {
 		String reg = "[\\u4e00-\\u9fa5]+";
 		return str.matches(reg);
 	}
+
+	public static boolean isEmpty(final CharSequence cs) {
+		return cs == null || cs.length() == 0;
+	}
 }

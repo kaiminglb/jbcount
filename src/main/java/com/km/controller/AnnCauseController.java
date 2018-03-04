@@ -11,10 +11,13 @@ package com.km.controller;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import com.km.common.FileUtils;
+import com.km.common.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
@@ -46,7 +49,9 @@ import org.wuwz.poi.hanlder.ReadHandler;
  */
 @Controller
 @RequestMapping(value = "/annCause")
+@Slf4j
 public class AnnCauseController {
+
     @Autowired
     AnnCauseService annCauseService;
 
@@ -184,7 +189,6 @@ public class AnnCauseController {
     SimpleDataSourceResult readCodeByKey(@RequestBody Map<String, Object> model) {
         //正常查询返回
         String key = (String) model.get("value");
-
         return new SimpleDataSourceResult(annCauseService.findAnnCauseByJianPin(key));
     }
 
@@ -196,17 +200,16 @@ public class AnnCauseController {
     public @ResponseBody
     Boolean checkByName(String p) {
         //正常查询返回
-//		Result r;
-//		if(annCauseService.checkExistedByAnnCauseName(p)){
-//			r = ResultUtils.error(ResultEnum.ANNCAUSEEXISTED);
-//		}else{
-//			r= ResultUtils.success();
-//		}
         return !annCauseService.checkExistedByAnnCauseName(p);
     }
 
-
-    // TODO 从excel批量导入案由
+    /**
+     * @Description: 从excel批量导入案由
+     * @Param: [file] 上传excel的MultipartFile对象
+     * @return: com.km.model.Result
+     * @Author: PiPiLu
+     * @Date: 2018/3/4
+     */
     @RequestMapping(value = "/createBatchFromExcel", method = RequestMethod.POST)
     public @ResponseBody
     Result createBatch(@RequestParam MultipartFile file) {
@@ -224,7 +227,6 @@ public class AnnCauseController {
             uploadDir.mkdir();
         }
 
-
         String filePath = uploadDir + File.separator + file.getOriginalFilename();
         /* 获取上传文件 */
         File storeFile = new File(filePath);
@@ -235,21 +237,44 @@ public class AnnCauseController {
 
 
             // 读取并解析文件
-            final List<AnnCause> list = new ArrayList<>();
+            /*保存正常的AnnCause对象*/
+            final List<AnnCause> validList = new ArrayList<>();
+            /*保存异常数据的行号*/
+            final List<Integer> invalidList = new ArrayList<>();
 
             // 执行excel文件导入
             ExcelKit.$Import().readExcel(storeFile, new ReadHandler() {
                 @Override
                 public void handler(int sheetIndex, int rowIndex, List<String> row) {
-                    if (rowIndex != 0) { //排除第一行
-                        AnnCause annCause = new AnnCause();
-                        annCause.setName(row.get(0));
-                        list.add(annCause);
+                    try {
+                        // 排除表头
+                        if (rowIndex == 0) return;
+
+                        // 验证行数据
+                        if (!validRow(row)) {
+                            // 行数据rowIndex验证失败，记录
+                            invalidList.add(rowIndex);
+                        } else {
+                            // 解析行数据
+
+                            // 方案1：记录行数据，读取完成后批量入库
+                            validList.add(analysisRow(row));
+
+                            // 方案2：单行直接入库
+                            // xxx.save(analysisRow(row));
+                        }
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        // 读取行：rowIndex发生异常，记录
+                        invalidList.add(rowIndex);
                     }
                 }
             });
-            /*批量保存案由*/
-            annCauseService.saveOrUpdateBatch(list);
+            /*批量保存案由，列表去重  List newList = new ArrayList(new HashSet(list)); */
+            annCauseService.saveOrUpdateBatch(new ArrayList(new HashSet(validList)));
+            //logger.warn("从properties中获取{}发生错误：{}",name, e.toString());
+            log.info("excel表格中{}行数据有问题，未添加成功", org.apache.commons.lang3.StringUtils.join(invalidList));
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -262,6 +287,35 @@ public class AnnCauseController {
         return result;
     }
 
-    // TODO  批量导出案由到excel
+    // TODO  批量导出案由到excel，并提供下载
 
+    /**
+     * @Description: 解析excel行为对象
+     * @Param: [row]
+     * @return: com.km.model.AnnCause
+     * @Author: PiPiLu
+     * @Date: 2018/3/5
+     */
+    private AnnCause analysisRow(List<String> row) {
+        AnnCause annCause = new AnnCause();
+        annCause.setName(row.get(0));
+        return annCause;
+    }
+
+    /**
+     * @Description: 验证该行数据合法性
+     * @Param: [row]
+     * @return: boolean
+     * @Author: PiPiLu
+     * @Date: 2018/3/5
+     */
+    private boolean validRow(List<String> row) {
+        String annCauseName = row.get(0);
+        // 0 案由名字字段 非空
+        if (StringUtils.isEmpty(annCauseName)) return false;
+        // 1 案由名字字段 全中文
+        if (!StringUtils.isAllChinese(annCauseName)) return false;
+        // 2 重复,这儿不去重
+        return true;
+    }
 }
