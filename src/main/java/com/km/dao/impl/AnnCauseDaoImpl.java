@@ -51,6 +51,7 @@ public class AnnCauseDaoImpl extends BaseDaoImpl<AnnCause> implements AnnCauseDa
 		Session session = getSession();
 		for (int i = 0; i < lists.size(); i++) {
              session.saveOrUpdate(lists.get(i));
+//             if (i % 50 == 0) { // 每一百条刷新并写入数据库
              if (i % 50 == 0) { // 每一百条刷新并写入数据库
                  session.flush();
                  session.clear();

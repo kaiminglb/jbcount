@@ -274,7 +274,7 @@ public class AnnCauseController {
             /*批量保存案由，列表去重  List newList = new ArrayList(new HashSet(list)); */
             annCauseService.saveOrUpdateBatch(new ArrayList(new HashSet(validList)));
             //logger.warn("从properties中获取{}发生错误：{}",name, e.toString());
-            log.info("excel表格中{}行数据有问题，未添加成功", org.apache.commons.lang3.StringUtils.join(invalidList));
+            log.info("excel表格{}中，{}行数据有问题，未添加成功",file.getOriginalFilename(),org.apache.commons.lang3.StringUtils.join(invalidList));
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -298,7 +298,10 @@ public class AnnCauseController {
      */
     private AnnCause analysisRow(List<String> row) {
         AnnCause annCause = new AnnCause();
-        annCause.setName(row.get(0));
+        String name = row.get(0);
+        annCause.setName(name);
+        annCause.setJianPin(PinyinUtils.converterToFirstSpell(name));
+        annCause.setQuanPin(PinyinUtils.getPingYin(name));
         return annCause;
     }
 
@@ -315,7 +318,8 @@ public class AnnCauseController {
         if (StringUtils.isEmpty(annCauseName)) return false;
         // 1 案由名字字段 全中文
         if (!StringUtils.isAllChinese(annCauseName)) return false;
-        // 2 重复,这儿不去重
+        // 2 数据库已有的重复
+        if(annCauseService.checkExistedByAnnCauseName(annCauseName)) return false;
         return true;
     }
 }

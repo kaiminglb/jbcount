@@ -332,12 +332,12 @@
             <version>${slf4j.jcl.version}</version>
         </dependency>
 
-
-        <dependency>
+        <!--只能绑定一个日志框架，否则输出不到文件-->
+       <!-- <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.17</version>
-        </dependency>
+        </dependency>-->
         <!--excel导入、导出工具-->
         <dependency>
             <groupId>org.wuwz</groupId>
@@ -394,8 +394,11 @@
                     <!-- jetty-maven-plugin 9.x配置 -->
                     <groupId>org.eclipse.jetty</groupId>
                     <artifactId>jetty-maven-plugin</artifactId>
-                    <version>9.0.0.v20130308</version>
+                    <version>9.4.5.v20170502</version>
                     <configuration>
+                        <!--配置了才能运行jetty:stop命令-->
+                        <stopKey>STOP</stopKey>
+                        <stopPort>9998</stopPort>
                         <scanIntervalSeconds>10</scanIntervalSeconds>
                         <httpConnector>
                             <port>9999</port>
